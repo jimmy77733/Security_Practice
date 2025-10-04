@@ -22,11 +22,12 @@ var key = Encoding.ASCII.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = "JWT";
+    // 將 Cookie 設定為主要的驗證和挑戰方案
+    options.DefaultScheme = "Cookies";
+    options.DefaultChallengeScheme = "Cookies";
 })
-.AddJwtBearer("JWT", options =>
+.AddCookie("Cookies") // <--- 加入這行來註冊 Cookie 驗證處理器
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => // 將 JWT 方案名稱改為標準的 "Bearer"
 {
     options.RequireHttpsMetadata = true; // 強制 HTTPS
     options.SaveToken = true;
@@ -61,16 +62,21 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     // 管理員專用策略
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin").RequireAuthenticatedUser());
+    options.AddPolicy("AdminOnly", policy => policy
+        .AddAuthenticationSchemes("Cookies", JwtBearerDefaults.AuthenticationScheme)
+        .RequireRole("Admin")
+        .RequireAuthenticatedUser());
     
     // 用戶或管理員策略
-    options.AddPolicy("UserOrAdmin", policy =>
-        policy.RequireRole("User", "Admin").RequireAuthenticatedUser());
+    options.AddPolicy("UserOrAdmin", policy => policy
+        .AddAuthenticationSchemes("Cookies", JwtBearerDefaults.AuthenticationScheme)
+        .RequireRole("User", "Admin")
+        .RequireAuthenticatedUser());
     
     // 需要驗證的一般策略
-    options.AddPolicy("Authenticated", policy =>
-        policy.RequireAuthenticatedUser());
+    options.AddPolicy("Authenticated", policy => policy
+        .AddAuthenticationSchemes("Cookies", JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser());
 });
 
 // 加入 MVC 支援
@@ -84,7 +90,7 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddHttpsRedirection(options =>
 {
     options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 5001; // 根據您的設定調整
+    options.HttpsPort = 7167; // 根據您的設定調整
 });
 
 // 設定 HSTS (HTTP Strict Transport Security)
@@ -103,6 +109,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts(); // 生產環境使用 HSTS
 }
+
 
 // 強制 HTTPS
 app.UseHttpsRedirection();

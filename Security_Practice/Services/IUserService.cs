@@ -16,5 +16,7 @@ namespace Security_Practice.Services
         string HashPassword(string password);
         bool VerifyPassword(string password, string hashedPassword);
         string SanitizeInput(string input);
+        Task UpdateProfileAsync(int userId, string username, string email);
+        Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword);
     }
 }

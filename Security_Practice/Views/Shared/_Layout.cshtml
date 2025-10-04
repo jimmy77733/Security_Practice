@@ -8,10 +8,18 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <!-- Font Awesome 圖示 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<style>
+    body {
+        background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+        background-attachment: fixed;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: background 0.5s ease-in-out;
+    }
+</style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark box-shadow mb-3 glass-navbar">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="fas fa-shield-alt me-2"></i>Security Practice
@@ -102,12 +110,21 @@
             @RenderBody()
         </main>
     </div>
-
+        <div class="container theme-switcher-container glass-card">
+            <div class="text-center">
+                <button type="button" class="theme-btn active" >經典藍</button>
+                <button type="button" class="theme-btn" >夢幻紫</button>
+                <button type="button" class="theme-btn" >青草綠</button>
+                <button type="button" class="theme-btn" >夕陽橙</button>
+                <button type="button" class="theme-btn" >玫瑰金</button>
+                <button type="button" class="theme-btn" >海洋之心</button>
+                <button type="button" class="theme-btn" >靜謐之夜</button>
+            </div>
+        </div>
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2024 - Security Practice - 
-            <a href="#">隱私權政策</a> | 
-            <a href="#">使用條款</a>
+            <a href="https://policies.google.com/privacy?hl=zh-TW">隱私權政策</a> | 
             <span class="float-end">
                 <i class="fas fa-lock me-1"></i>安全連線
             </span>
@@ -117,6 +134,62 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    
+    function changeTheme(theme) {
+        let startColor, endColor;
+
+        switch (theme) {
+            case 'purple': startColor = '#e0c3fc'; endColor = '#8ec5fc'; break;
+            case 'green': startColor = '#a8e063'; endColor = '#56ab2f'; break;
+            case 'orange': startColor = '#fceabb'; endColor = '#f8b500'; break;
+            case 'rose': startColor = '#f4c4f3'; endColor = '#fc67fa'; break;
+            case 'ocean': startColor = '#2193b0'; endColor = '#6dd5ed'; break;
+            case 'night': startColor = '#232526'; endColor = '#414345'; break;
+            case 'blue': default: startColor = '#89f7fe'; endColor = '#66a6ff'; break;
+        }
+
+        document.documentElement.style.setProperty('--bg-gradient-start', startColor);
+        document.documentElement.style.setProperty('--bg-gradient-end', endColor);
+        
+        localStorage.setItem('selectedTheme', theme);
+    }
+
+    function updateActiveButton(theme) {
+        themeButtons.forEach(button => {
+            const buttonTheme = button.innerText.trim().toLowerCase();
+            const themeMap = { "經典藍": "blue", "夢幻紫": "purple", "青草綠": "green", "夕陽橙": "orange", "玫瑰金": "rose", "海洋之心": "ocean", "靜謐之夜": "night" };
+            const buttonThemeKey = themeMap[button.innerText.trim()];
+
+            if (buttonThemeKey === theme) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+    (function () {
+        const savedTheme = localStorage.getItem('selectedTheme');
+        
+        if (savedTheme) {
+            changeTheme(savedTheme);
+            updateActiveButton(savedTheme);
+        }
+    })();
+
+    themeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const themeMap = { "經典藍": "blue", "夢幻紫": "purple", "青草綠": "green", "夕陽橙": "orange", "玫瑰金": "rose", "海洋之心": "ocean", "靜謐之夜": "night" };
+            const themeKey = themeMap[this.innerText.trim()];
+            if(themeKey) {
+                changeTheme(themeKey);
+                updateActiveButton(themeKey);
+            }
+        });
+    });
+</script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

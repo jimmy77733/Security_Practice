@@ -54,7 +54,7 @@ namespace Security_Practice.Controllers
             {
                 // 驗證用戶身份
                 var user = await _userService.AuthenticateAsync(model.Username, model.Password);
-                
+
                 if (user == null)
                 {
                     ModelState.AddModelError(string.Empty, "使用者名稱或密碼錯誤");
@@ -97,7 +97,7 @@ namespace Security_Practice.Controllers
                 var claimsIdentity = new ClaimsIdentity(claims, "JWT");
                 var authProperties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties();
 
-                await HttpContext.SignInAsync("JWT", new ClaimsPrincipal(claimsIdentity), authProperties);
+                await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity), authProperties);
 
                 _logger.LogInformation("用戶 {Username} 成功登入", user.Username);
 
@@ -179,7 +179,7 @@ namespace Security_Practice.Controllers
                 Response.Cookies.Delete("RefreshToken");
 
                 // 清除身份認證
-                await HttpContext.SignOutAsync("JWT");
+                await HttpContext.SignOutAsync("Cookies");
 
                 _logger.LogInformation("用戶 {Username} 已登出", User.Identity?.Name);
 
@@ -221,5 +221,59 @@ namespace Security_Practice.Controllers
             var exists = await _userService.EmailExistsAsync(email);
             return Json(new { available = !exists, message = exists ? "電子郵件已被註冊" : "電子郵件可用" });
         }
+        
+        /// 顯示更改密碼頁面
+        [HttpGet]
+        [Authorize]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        /// 處理更改密碼提交
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdValue) || !int.TryParse(userIdValue, out var userId))
+                {
+                    return Unauthorized("無法驗證用戶身份，請重新登入。");
+                }
+
+                var result = await _userService.ChangePasswordAsync(userId, model.OldPassword, model.NewPassword); // This line is correct, the error is in the IUserService interface.
+
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "密碼已成功更新！";
+                    return RedirectToAction("Profile", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError("OldPassword", "目前的密碼不正確。");
+                    return View(model);
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更改密碼時發生錯誤");
+                ModelState.AddModelError(string.Empty, "更新密碼時發生未知錯誤，請稍後再試。");
+                return View(model);
+            }
+        }
+
     }
 }

@@ -140,6 +140,74 @@ namespace Security_Practice.Services
                 .AnyAsync(u => u.Email == email);
         }
 
+        /// 更新用戶個人資料 (使用者名稱和電子郵件)
+        public async Task UpdateProfileAsync(int userId, string newUsername, string newEmail)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("找不到用戶。");
+            }
+
+            if (user.Role == "Admin" && user.Username.Equals("admin", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("基於安全考量，預設管理員帳戶的個人資料無法被修改。");
+            }
+
+            // 清理輸入
+            newUsername = SanitizeInput(newUsername);
+            newEmail = SanitizeInput(newEmail);
+
+            // 檢查新的使用者名稱是否已被其他人使用
+            if (user.Username != newUsername && await UsernameExistsAsync(newUsername))
+            {
+                throw new InvalidOperationException("此使用者名稱已被使用。");
+            }
+
+            // 檢查新的電子郵件是否已被其他人使用
+            if (user.Email.ToLower() != newEmail.ToLower() && await EmailExistsAsync(newEmail))
+            {
+                throw new InvalidOperationException("此電子郵件已被註冊。");
+            }
+
+            user.Username = newUsername;
+            user.Email = newEmail;
+
+            await _context.SaveChangesAsync();
+        }
+
+        /// 更改用戶密碼
+        public async Task<bool> ChangePasswordAsync(int userId, string oldPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("嘗試更改不存在的用戶 {UserId} 的密碼", userId);
+                return false;
+            }
+
+            // *** 新增：防止修改預設管理員密碼 ***
+            if (user.Role == "Admin" && user.Username.Equals("admin", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("基於安全考量，預設管理員帳戶的密碼無法透過此頁面更改。");
+            }
+
+            // 驗證舊密碼
+            if (!VerifyPassword(oldPassword, user.PasswordHash))
+            {
+                _logger.LogWarning("用戶 {UserId} 更改密碼失敗：舊密碼錯誤", userId);
+                return false;
+            }
+
+            // 雜湊新密碼並更新
+            user.PasswordHash = HashPassword(newPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("用戶 {UserId} 成功更改密碼", userId);
+            return true;
+        }
+
         /// 使用 BCrypt 雜湊密碼 - 遵循 OWASP 建議
         public string HashPassword(string password)
         {
