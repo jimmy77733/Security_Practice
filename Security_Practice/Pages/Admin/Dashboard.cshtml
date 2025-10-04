@@ -1,0 +1,314 @@
+@model Security_Practice.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "管理員儀表板";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-tachometer-alt text-danger me-2"></i>管理員儀表板
+    </h2>
+    <div>
+        <button class="btn btn-outline-success" onclick="refreshData()">
+            <i class="fas fa-sync-alt me-2"></i>刷新資料
+        </button>
+        <span class="text-muted small">
+            最後更新: @Model.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss")
+        </span>
+    </div>
+</div>
+
+<!-- 統計卡片 -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            總用戶數
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.TotalUsers
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            管理員
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.AdminUsers
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-shield fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            一般用戶
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.RegularUsers
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            活躍用戶
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.Users.Count(u => u.IsActive)
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 用戶列表 -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-2"></i>最新用戶列表
+                </h6>
+                <a href="@Url.Action("Users", "Admin")" class="btn btn-sm btn-primary">
+                    查看全部
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>使用者名稱</th>
+                                <th>電子郵件</th>
+                                <th>角色</th>
+                                <th>註冊時間</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Users.OrderByDescending(u => u.CreatedAt).Take(10))
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-user-circle me-2"></i>
+                                        @user.Username
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        @if (user.Role == "Admin")
+                                        {
+                                            <span class="badge bg-danger">管理員</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">用戶</span>
+                                        }
+                                    </td>
+                                    <td>@user.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> 啟用
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle"></i> 停用
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 系統狀態和快速操作 -->
+    <div class="col-lg-4">
+        <!-- 系統狀態 -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-server me-2"></i>系統狀態
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>伺服器運行時間</span>
+                        <span class="text-success">正常</span>
+                    </div>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-success" style="width: 99%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>資料庫連接</span>
+                        <span class="text-success">穩定</span>
+                    </div>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-success" style="width: 98%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>安全等級</span>
+                        <span class="text-info">高</span>
+                    </div>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-info" style="width: 95%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 快速操作 -->
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fas fa-tools me-2"></i>快速操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-primary">
+                        <i class="fas fa-users me-2"></i>用戶管理
+                    </a>
+                    <button class="btn btn-outline-info" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>匯出資料
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="showSystemSettings()">
+                        <i class="fas fa-cogs me-2"></i>系統設定
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="showSecurityLogs()">
+                        <i class="fas fa-shield-alt me-2"></i>安全日誌
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 載入指示器 -->
+<div id="loadingIndicator" class="d-none">
+    <div class="position-fixed top-50 start-50 translate-middle">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">載入中...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 刷新資料功能
+        function refreshData() {
+            $('#loadingIndicator').removeClass('d-none');
+            
+            // 模擬 AJAX 請求
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        }
+
+        // 匯出資料功能
+        function exportData() {
+            if (confirm('確定要匯出所有用戶資料嗎？')) {
+                // 這裡可以實作匯出功能
+                alert('匯出功能開發中...');
+            }
+        }
+
+        // 系統設定功能
+        function showSystemSettings() {
+            alert('系統設定功能開發中...');
+        }
+
+        // 安全日誌功能
+        function showSecurityLogs() {
+            alert('安全日誌功能開發中...');
+        }
+
+        // 自動刷新統計資料
+        setInterval(function() {
+            fetch('@Url.Action("GetStats", "Admin")')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.error) {
+                        // 更新統計數據 (如果需要的話)
+                        console.log('統計資料已更新', data);
+                    }
+                })
+                .catch(error => console.error('獲取統計資料時發生錯誤:', error));
+        }, 30000); // 每30秒更新一次
+
+        // 頁面載入動畫
+        $(document).ready(function() {
+            $('.card').hide().fadeIn(600);
+        });
+    </script>
+    
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        .border-left-danger {
+            border-left: 0.25rem solid #e74a3b !important;
+        }
+        .text-xs {
+            font-size: .7rem;
+        }
+    </style>
+}

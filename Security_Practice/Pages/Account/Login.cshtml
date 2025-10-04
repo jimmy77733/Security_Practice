@@ -1,0 +1,115 @@
+@model Security_Practice.Models.LoginViewModel
+@{
+    ViewData["Title"] = "登入";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>用戶登入
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Login" method="post" class="needs-validation" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label">
+                            <i class="fas fa-user me-1"></i>使用者名稱
+                        </label>
+                        <input asp-for="Username" class="form-control form-control-lg" 
+                               placeholder="請輸入使用者名稱" autocomplete="username" required />
+                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>密碼
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="Password" type="password" class="form-control form-control-lg" 
+                                   placeholder="請輸入密碼" autocomplete="current-password" required />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">記住我</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>登入
+                        </button>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="mb-0">還沒有帳戶？</p>
+                        <a asp-action="Register" class="btn btn-outline-success">
+                            <i class="fas fa-user-plus me-2"></i>立即註冊
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 預設帳戶資訊 (僅開發環境) -->
+        @if (ViewContext.HttpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() == true)
+        {
+            <div class="card mt-3 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>測試帳戶</h6>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-1"><strong>管理員:</strong> admin / Admin123#</p>
+                    <p class="mb-0"><strong>一般用戶:</strong> testuser / Test123#</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 密碼顯示/隱藏功能
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordField = document.getElementById('Password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // 表單驗證
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    </script>
+}
